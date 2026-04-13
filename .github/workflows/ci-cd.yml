@@ -1,0 +1,59 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
+
+    - run: |
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+
+    - run: |
+        pytest --cov=app --cov-report=xml
+
+    - name: SonarQube
+      uses: SonarSource/sonarcloud-github-action@v2
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  docker:
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - run: |
+        docker login ${{ secrets.JFROG_URL }} \
+        -u ${{ secrets.JFROG_USERNAME }} \
+        -p ${{ secrets.JFROG_PASSWORD }}
+
+    - run: |
+        docker build -t ${{ secrets.JFROG_URL }}/docker/fjpd-app:${{ github.sha }} .
+
+    - run: |
+        docker push ${{ secrets.JFROG_URL }}/docker/fjpd-app:${{ github.sha }}
+
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: azure/setup-kubectl@v3
+
+    - run: echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
+
+    - run: |
+        kubectl --kubeconfig=kubeconfig apply -f deployment.yaml
