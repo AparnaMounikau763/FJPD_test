@@ -1,0 +1,5 @@
+containers:
+- name: fjpd-app
+  image: <JFROG_URL>/docker/fjpd-app:latest
+  ports:
+  - containerPort: 5000
