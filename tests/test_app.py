@@ -1,3 +1,4 @@
+import pytest
 from app.app import app
 from app.model import preprocess_text
 
