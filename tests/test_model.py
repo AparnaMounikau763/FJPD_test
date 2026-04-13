@@ -1,6 +1,8 @@
 import joblib
 import numpy as np
 from app import preprocess_text
+from app.app import app
+from app.model import preprocess_text
 
 # Load trained model & vectorizer
 model = joblib.load("job_fraud_model.pkl")

@@ -1,5 +1,5 @@
-import pytest
-from app import app
+from app.app import app
+from app.model import preprocess_text
 
 @pytest.fixture
 def client():
